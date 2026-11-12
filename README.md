@@ -1,5 +1,7 @@
 # BearWithMe
 
+[![CI](https://github.com/nvlinh233/bearwithme/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/nvlinh233/bearwithme/actions/workflows/ci.yml)
+
 Flashcards with spaced repetition (SM-2) for IT workplace English.
 
 ## Repository layout
@@ -31,7 +33,7 @@ Local infrastructure settings (PostgreSQL image, port, credentials) live in
 
 ## Documentation
 
-- [v1 product specification](docs/specs/v1-product-spec.md)
+- [v1 product specification](docs/specs/v1-product-spec.md) ([rules for specs](docs/specs/README.md))
 - [Change records](docs/changes/)
 - [Architecture decision records](docs/adr/)
 - [Contributing guide](CONTRIBUTING.md)
