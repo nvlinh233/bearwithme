@@ -4,7 +4,7 @@
 
 ## Why
 
-Closes #
+Closes #<!-- issue number -->
 
 <!-- Requirement IDs, if any: FR-xx -->
 
