@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: bearwithme
+  docker:
+    compose:
+      file: ../../deploy/compose.yaml
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    locations: classpath:db/migration
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
