@@ -31,6 +31,26 @@ cd api
 Local infrastructure settings (PostgreSQL image, port, credentials) live in
 [`deploy/.env`](deploy/.env). See [ADR-0001](docs/adr/0001-configuration-management.md).
 
+## Local development
+
+Docker Compose runs the local infrastructure defined in [`deploy/compose.yaml`](deploy/compose.yaml).
+`spring-boot:run` starts it automatically; start it by hand to use the tools without the API.
+
+```bash
+docker compose -f deploy/compose.yaml up -d      # start PostgreSQL and Adminer
+docker compose -f deploy/compose.yaml ps         # postgres should be "healthy"
+docker compose -f deploy/compose.yaml down       # stop, keep data
+docker compose -f deploy/compose.yaml down -v    # stop and delete the database volume
+```
+
+| Service    | URL                                     | Login                                          |
+|------------|-----------------------------------------|------------------------------------------------|
+| API health | <http://localhost:8080/actuator/health> | -                                              |
+| Adminer    | <http://localhost:8081>                 | System `PostgreSQL`, server `postgres`, user / password / database `bearwithme` |
+| PostgreSQL | `localhost:5433`                        | `bearwithme` / `bearwithme`, database `bearwithme` |
+
+Ports and credentials come from [`deploy/.env`](deploy/.env); both ports bind to `127.0.0.1` only.
+
 ## Documentation
 
 - [v1 product specification](docs/specs/v1-product-spec.md) ([rules for specs](docs/specs/README.md))
