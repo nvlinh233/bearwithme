@@ -1,0 +1,11 @@
+# Local development: Spring Boot starts deploy/compose.yaml and derives the datasource (ADR-0001).
+# Path is relative to the working directory, which must be api/app.
+spring:
+  docker:
+    compose:
+      enabled: true
+      file: ../../deploy/compose.yaml
+
+logging:
+  level:
+    dev.bearwithme: debug

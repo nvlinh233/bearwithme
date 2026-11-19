@@ -1,0 +1,5 @@
+# Tests: the datasource comes from Testcontainers (@ServiceConnection), never from Compose.
+spring:
+  docker:
+    compose:
+      enabled: false
