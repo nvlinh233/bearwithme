@@ -13,6 +13,10 @@ spring:
       ddl-auto: validate
   flyway:
     locations: classpath:db/migration
+    # Values come from environment variables (ADR-0001); startup fails if they are missing.
+    placeholders:
+      "[seed_username]": ${BWM_SEED_USERNAME}
+      "[seed_password]": ${BWM_SEED_PASSWORD}
 
 springdoc:
   swagger-ui:
