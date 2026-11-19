@@ -1,5 +1,8 @@
 # Tests: the datasource comes from Testcontainers (@ServiceConnection), never from Compose.
 spring:
+  config:
+    # Same deploy/.env as Compose; path set by Surefire (api/pom.xml).
+    import: file:${deploy.env.file}[.properties]
   docker:
     compose:
       enabled: false
