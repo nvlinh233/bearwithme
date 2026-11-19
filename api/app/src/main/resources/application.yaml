@@ -17,6 +17,15 @@ spring:
     placeholders:
       "[seed_username]": ${BWM_SEED_USERNAME}
       "[seed_password]": ${BWM_SEED_PASSWORD}
+  mvc:
+    problemdetails:
+      enabled: true
+
+bearwithme:
+  jwt:
+    secret: ${BWM_JWT_SECRET}
+    issuer: ${BWM_JWT_ISSUER}
+    ttl: 7d
 
 springdoc:
   swagger-ui:
