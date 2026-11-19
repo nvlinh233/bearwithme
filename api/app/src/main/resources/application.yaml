@@ -1,15 +1,22 @@
 spring:
   application:
     name: bearwithme
+  profiles:
+    # v1 runs locally only; tests activate "test" explicitly.
+    default: dev
   docker:
     compose:
-      file: ../../deploy/compose.yaml
+      enabled: false
   jpa:
     open-in-view: false
     hibernate:
       ddl-auto: validate
   flyway:
     locations: classpath:db/migration
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui
 
 management:
   endpoints:
