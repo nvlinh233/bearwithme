@@ -21,7 +21,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 
 /** Standalone MockMvc: no Spring context, no database. */
 class GlobalExceptionHandlerTests {
@@ -86,8 +86,11 @@ class GlobalExceptionHandlerTests {
     record CardBody(@NotBlank String term, @NotBlank @Size(max = 500) String meaning) {
     }
 
-    /** {@code @ResponseBody}, not {@code @RestController}: keeps it out of component scanning in other tests. */
-    @ResponseBody
+    /**
+     * Standalone MockMvc only maps {@code @Controller} types. Nested in a test class, it is still kept out of
+     * {@code @SpringBootTest} contexts by Spring Boot's TestTypeExcludeFilter.
+     */
+    @RestController
     static class FakeController {
 
         @GetMapping("/not-found")
