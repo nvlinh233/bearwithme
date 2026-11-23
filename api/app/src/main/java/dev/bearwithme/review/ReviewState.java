@@ -82,4 +82,18 @@ class ReviewState implements Persistable<Long> {
     LocalDate getDueDate() {
         return dueDate;
     }
+
+    Sm2Scheduler.State toSchedulerState() {
+        return new Sm2Scheduler.State(easeFactor, repetitions, intervalDays);
+    }
+
+    /** FR-R3: stores the scheduler's result; dirty checking writes the UPDATE at commit. */
+    void apply(Sm2Scheduler.Result result, Instant reviewedAt) {
+        Sm2Scheduler.State next = result.state();
+        this.easeFactor = next.easeFactor();
+        this.repetitions = next.repetitions();
+        this.intervalDays = next.intervalDays();
+        this.dueDate = result.dueDate();
+        this.lastReviewedAt = reviewedAt;
+    }
 }
