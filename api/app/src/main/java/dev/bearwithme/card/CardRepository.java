@@ -1,5 +1,6 @@
 package dev.bearwithme.card;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -9,6 +10,9 @@ import org.springframework.data.jpa.repository.Query;
 interface CardRepository extends JpaRepository<Card, Long>, JpaSpecificationExecutor<Card> {
 
     Optional<Card> findByIdAndUserId(Long id, Long userId);
+
+    /** {@link CardContentLookup}: at most one review session (50 cards, FR-R1). */
+    List<Card> findByUserIdAndIdIn(Long userId, Collection<Long> ids);
 
     /**
      * FR-C2; {@code lower(term)} matches the unique index {@code uq_cards_user_term}. Pass {@code excludeId = 0}
