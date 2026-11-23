@@ -11,8 +11,10 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import java.io.IOException;
 import java.net.URI;
 import java.util.List;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,15 +25,18 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/cards")
 class CardController {
 
     private final CardService service;
+    private final CardImportService importer;
 
-    CardController(CardService service) {
+    CardController(CardService service, CardImportService importer) {
         this.service = service;
+        this.importer = importer;
     }
 
     /** FR-C1, FR-C3: lengths, at most 10 lowercase kebab-case tags. */
@@ -73,6 +78,12 @@ class CardController {
     @PutMapping("/{id}")
     CardDetail update(@PathVariable long id, @Valid @RequestBody CardRequest request) {
         return service.update(id, request.toInput());
+    }
+
+    /** FR-I1..I4: multipart field {@code file}, UTF-8 CSV with header term,meaning,example,tags. */
+    @PostMapping(path = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    CardImportService.ImportResult importCsv(@RequestParam("file") MultipartFile file) throws IOException {
+        return importer.importCsv(file.getBytes());
     }
 
     @DeleteMapping("/{id}")

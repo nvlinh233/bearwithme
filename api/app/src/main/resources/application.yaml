@@ -11,6 +11,15 @@ spring:
     open-in-view: false
     hibernate:
       ddl-auto: validate
+    properties:
+      # Groups INSERTs that do not need a generated id (e.g. review_states) into JDBC batches
+      hibernate.jdbc.batch_size: 50
+      hibernate.order_inserts: true
+  servlet:
+    multipart:
+      # FR-I2: CSV import limit (larger uploads get 413 before reaching the controller)
+      max-file-size: 2MB
+      max-request-size: 3MB
   flyway:
     locations: classpath:db/migration
     # Values come from environment variables (ADR-0001); startup fails if they are missing.

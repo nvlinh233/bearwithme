@@ -1,5 +1,6 @@
 package dev.bearwithme.card;
 
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -16,4 +17,8 @@ interface CardRepository extends JpaRepository<Card, Long>, JpaSpecificationExec
     @Query("select case when count(c) > 0 then true else false end from Card c"
             + " where c.userId = :userId and lower(c.term) = lower(:term) and c.id <> :excludeId")
     boolean existsTerm(Long userId, String term, Long excludeId);
+
+    /** CSV import: all of the user's terms in one query (at most ~10,000, spec: Data size). */
+    @Query("select lower(c.term) from Card c where c.userId = :userId")
+    List<String> findLowerCaseTerms(Long userId);
 }

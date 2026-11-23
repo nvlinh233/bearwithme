@@ -12,9 +12,11 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
@@ -90,13 +92,45 @@ class CardService {
         long userId = currentUser.id();
         String term = normalize(input.term());
         requireUniqueTerm(userId, term, 0L);
+        Card card = insert(userId, term, input, resolveTags(userId, input.tags(), existingTags(userId, input.tags())),
+                clock.instant());
+        return toDetail(card);
+    }
+
+    record ImportCounts(int created, int skipped) {
+    }
+
+    /**
+     * FR-I3, FR-I4: inserts already validated rows in this one transaction. Terms that exist, or appear
+     * earlier in the same file, are skipped. Terms and tags are loaded once instead of once per row.
+     */
+    ImportCounts importRows(List<CardInput> rows) {
+        long userId = currentUser.id();
         Instant now = clock.instant();
+        Set<String> knownTerms = new HashSet<>(cards.findLowerCaseTerms(userId));
+        Map<String, Tag> tagCache = tags.findByUserId(userId).stream()
+                .collect(Collectors.toMap(Tag::getName, Function.identity()));
+        int created = 0;
+        int skipped = 0;
+        for (CardInput row : rows) {
+            String term = normalize(row.term());
+            if (!knownTerms.add(term.toLowerCase(Locale.ROOT))) {
+                skipped++;
+                continue;
+            }
+            insert(userId, term, row, resolveTags(userId, row.tags(), tagCache), now);
+            created++;
+        }
+        return new ImportCounts(created, skipped);
+    }
+
+    private Card insert(long userId, String term, CardInput input, Set<Tag> cardTags, Instant now) {
         Card card = new Card(userId, now);
         card.update(term, normalize(input.meaning()), normalize(input.example()), normalize(input.note()),
-                resolveTags(userId, input.tags()), now);
+                cardTags, now);
         cards.save(card); // IDENTITY: the INSERT runs now, so the id is known
         events.publishEvent(new CardCreatedEvent(card.getId(), userId));
-        return toDetail(card);
+        return card;
     }
 
     CardDetail update(long id, CardInput input) {
@@ -104,7 +138,8 @@ class CardService {
         String term = normalize(input.term());
         requireUniqueTerm(card.getUserId(), term, card.getId());
         card.update(term, normalize(input.meaning()), normalize(input.example()), normalize(input.note()),
-                resolveTags(card.getUserId(), input.tags()), clock.instant());
+                resolveTags(card.getUserId(), input.tags(), existingTags(card.getUserId(), input.tags())),
+                clock.instant());
         return toDetail(card); // dirty checking writes the UPDATE at commit
     }
 
@@ -129,17 +164,22 @@ class CardService {
         }
     }
 
-    /** FR-C3: existing tags are reused, unknown ones are created. */
-    private Set<Tag> resolveTags(long userId, List<String> names) {
+    private Map<String, Tag> existingTags(long userId, List<String> names) {
+        if (names == null || names.isEmpty()) {
+            return new HashMap<>();
+        }
+        return tags.findByUserIdAndNameIn(userId, new LinkedHashSet<>(names)).stream()
+                .collect(Collectors.toMap(Tag::getName, Function.identity()));
+    }
+
+    /** FR-C3: existing tags are reused, unknown ones are created and added to {@code cache}. */
+    private Set<Tag> resolveTags(long userId, List<String> names, Map<String, Tag> cache) {
         if (names == null || names.isEmpty()) {
             return Set.of();
         }
-        Set<String> wanted = new LinkedHashSet<>(names);
-        Map<String, Tag> existing = tags.findByUserIdAndNameIn(userId, wanted).stream()
-                .collect(Collectors.toMap(Tag::getName, Function.identity()));
         Set<Tag> result = new HashSet<>();
-        for (String name : wanted) {
-            result.add(existing.computeIfAbsent(name, n -> tags.save(new Tag(userId, n))));
+        for (String name : new LinkedHashSet<>(names)) {
+            result.add(cache.computeIfAbsent(name, n -> tags.save(new Tag(userId, n))));
         }
         return result;
     }
