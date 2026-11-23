@@ -1,6 +1,7 @@
 package dev.bearwithme.common.web;
 
 import dev.bearwithme.common.error.ConflictException;
+import dev.bearwithme.common.error.InvalidRequestException;
 import dev.bearwithme.common.error.NotFoundException;
 import java.util.List;
 import org.slf4j.Logger;
@@ -36,6 +37,11 @@ class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(NotFoundException.class)
     ProblemDetail handleNotFound(NotFoundException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(InvalidRequestException.class)
+    ProblemDetail handleInvalidRequest(InvalidRequestException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
     @ExceptionHandler(ConflictException.class)
