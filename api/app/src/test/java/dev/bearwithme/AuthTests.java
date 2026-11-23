@@ -42,7 +42,7 @@ import org.springframework.web.context.WebApplicationContext;
 class AuthTests {
 
     /** Any protected path works: an authenticated request without a handler gets 404, not 401. */
-    private static final String PROTECTED = "/api/cards";
+    private static final String PROTECTED = "/api/no-such-endpoint";
 
     @Autowired
     WebApplicationContext context;
@@ -136,6 +136,19 @@ class AuthTests {
         assertRejected(sign(secret(), "someone-else", Instant.now(), Instant.now().plus(Duration.ofDays(1))));
     }
 
+    @Test
+    void tokenWithoutUserIdIsRejected() throws Exception {
+        assertRejected(sign(secret(), issuer(), Instant.now(), Instant.now().plus(Duration.ofDays(1)), false));
+    }
+
+    @Test
+    void validForgedTokenIsAccepted() throws Exception {
+        // control case: proves the rejections above are caused by the one thing each test changes
+        String token = sign(secret(), issuer(), Instant.now(), Instant.now().plus(Duration.ofDays(1)));
+        mvc.perform(get(PROTECTED).header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+                .andExpect(status().isNotFound());
+    }
+
     private ResultActions login(String user, String pass) throws Exception {
         String json = "{\"username\":\"" + user + "\",\"password\":\"" + pass + "\"}";
         return mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON).content(json));
@@ -155,14 +168,21 @@ class AuthTests {
     }
 
     private static String sign(String secret, String issuer, Instant issuedAt, Instant expiresAt) {
+        return sign(secret, issuer, issuedAt, expiresAt, true);
+    }
+
+    private static String sign(String secret, String issuer, Instant issuedAt, Instant expiresAt, boolean withUid) {
         var key = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
         var encoder = new NimbusJwtEncoder(new ImmutableSecret<>(key));
-        var claims = JwtClaimsSet.builder()
+        var builder = JwtClaimsSet.builder()
                 .issuer(issuer)
                 .subject("nvlinh233")
                 .issuedAt(issuedAt.truncatedTo(ChronoUnit.SECONDS))
-                .expiresAt(expiresAt.truncatedTo(ChronoUnit.SECONDS))
-                .build();
+                .expiresAt(expiresAt.truncatedTo(ChronoUnit.SECONDS));
+        if (withUid) {
+            builder.claim("uid", 1L);
+        }
+        var claims = builder.build();
         return encoder.encode(JwtEncoderParameters.from(JwsHeader.with(MacAlgorithm.HS256).build(), claims))
                 .getTokenValue();
     }
