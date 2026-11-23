@@ -17,9 +17,6 @@ spring:
     placeholders:
       "[seed_username]": ${BWM_SEED_USERNAME}
       "[seed_password]": ${BWM_SEED_PASSWORD}
-  mvc:
-    problemdetails:
-      enabled: true
 
 bearwithme:
   jwt:
